@@ -1,6 +1,6 @@
 var music_dir = "./music"
-//var domain = "42.96.195.88"
-var domain = "127.0.0.1"
+var domain = "42.96.195.88"
+//var domain = "127.0.0.1"
 var port = 9990
 
 var fs = require("fs")
@@ -10,14 +10,13 @@ var request = require("request")
 
 function play(musicName,cb){
     console.log("PLAYING:"+musicName)
-    var playmusic = spawn('mplayer',[musicName])
+    var prefix = 'http://'+domain+':'+port+'/'
+    var address = prefix+encodeURIComponent(musicName.substring(prefix.length,musicName.length))
+    console.log(address);
+    var playmusic = spawn('mplayer',[address],{cwd:__dirname})
     playmusic.on("error",function(err){
         console.log(err);
     })
-    
-    playmusic.stdout.on('data', function (data) {
-    console.log('stdout: ' + data);
-    });
 
     playmusic.stderr.on('data', function (data) {
     console.log('stderr: ' + data);
@@ -31,6 +30,33 @@ function play(musicName,cb){
             console.log("PLAY:ERROR")
         }
     })
+}
+
+function randomPlay(musicList){
+    var next = function(musicList,playedList){
+        if(musicList.length == playedList.length){
+            playedList = []
+            console.log("PLAY:ONE_LOOP")
+        }
+        // gene random order
+        var unplayedList = []
+        musicList.forEach(function(name){
+            var length = playedList.length
+            var playFlag = false
+            for(var i=0;i<length;i++){
+                if(name == playedList){
+                    playFlag = true
+                }
+            }
+            if(!playFlag)unplayedList.push(name)
+        })
+        var order = parseInt(Math.random()*unplayedList.length)
+        play(musicList[order],function(){
+            playedList.push(musicList[order])
+            next(musicList,playedList)
+        })
+    }
+    next(musicList,[])
 }
 
 function loopPlay(musicList){
@@ -47,7 +73,8 @@ function loopPlay(musicList){
 }
 
 getPlayList(function(myList){
-    loopPlay(myList);
+    //loopPlay(myList);
+    randomPlay(myList)
 });
 
 
