@@ -1,6 +1,6 @@
 var music_dir = "./music"
-//var domain = "42.96.195.88"
-var domain = "127.0.0.1"
+var domain = "42.96.195.88"
+//var domain = "127.0.0.1"
 var port = 9990
 
 var fs = require("fs")
@@ -10,18 +10,18 @@ var request = require("request")
 
 function play(musicName,cb){
     console.log("PLAYING:"+musicName)
-    var playmusic = spawn('mplayer',[musicName])
+    var playmusic = spawn('mplayer',['-cache','500',musicName])
     playmusic.on("error",function(err){
         console.log(err);
     })
     
-    playmusic.stdout.on('data', function (data) {
-    console.log('stdout: ' + data);
-    });
-
-    playmusic.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
-    });
+     playmusic.stdout.on('data', function (data) {
+     console.log('stdout: ' + data);
+     });
+ 
+     playmusic.stderr.on('data', function (data) {
+     console.log('stderr: ' + data);
+     });
 
     
     playmusic.on("close",function(code){
@@ -46,8 +46,40 @@ function loopPlay(musicList){
     next(musicList,0);
 }
 
+function randomPlay(musicList){
+    var next = function(musicList,playedList){
+        if(playedList.length == musicList.length){
+            playedList = []
+            console.log("PLAY:ONE_LOOP")
+        }
+        // gene random order
+        var unplayedList = []
+        musicList.forEach(function(name){
+            var playedLength = playedList.length
+            var playedFlag = false
+            for(var i=0;i<playedLength;i++){
+                if(playedList[i] == name){
+                    // this music is played
+                   playedFlag = true
+                }
+            }
+            if(!playedFlag)unplayedList.push(name)
+        })
+
+        randomOrder = parseInt(Math.random()*unplayedList.length)
+	console.log(randomOrder)
+        play(musicList[randomOrder],function(){
+            playedList.push(musicList[randomOrder])
+            next(musicList,playedList)
+        })
+    }
+
+    next(musicList,[])
+}
+
 getPlayList(function(myList){
-    loopPlay(myList);
+    //loopPlay(myList);
+    randomPlay(myList);
 });
 
 
