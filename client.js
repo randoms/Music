@@ -6,6 +6,7 @@ var port = 9990
 var fs = require("fs")
 var spawn = require('child_process').spawn
 var request = require("request")
+var raw_input = require("./utils/raw_input.js")
 
 // mplayer will leave 2 process when play over
 // this need to be cleaned
@@ -42,9 +43,12 @@ function play(musicName,cb){
     })
 
     playmusic.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
+        console.log('stderr: ' + data);
     });
-
+    
+    playmusic.stdout.on('data',function(data){
+        console.log('stdout: '+data)
+    })
     
     playmusic.on("close",function(code){
         if(code == 0){
@@ -104,11 +108,35 @@ getPlayList(function(myList){
 function getPlayList(cb){
     request('http://'+domain+":"+port+"/playList", function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            var myList = JSON.parse(body);
-            console.log("GET_PLAY_LIST:OK")
-            cb(myList);
+            var myList = JSON.parse(body)
+            var prefix = 'http://'+domain+":"+port;
+            var myMusicList = []
+            console.log("Please select your playList:")
+            
+            for(var count = 0; count<myList.length;count++){
+                console.log((count+1)+" "+myList[count].substring(prefix.length+1))
+            }
+            console.log("0 play all list")
+            raw_input(">",function(cmd){
+                var cmd = cmd.split(' ')
+                var completeFlag = 0;
+                for(var i=0;i<cmd.length;i++){
+                    var url = prefix + "/playList"+myList[i].substring(prefix.length)
+                    request(url,function(err,res,body){
+                        var music = JSON.parse(body);
+                        music.forEach(function(add){
+                            myMusicList.push(add);
+                        })
+                        completeFlag++
+                        if(completeFlag == cmd.length)cb(myMusicList)
+                    })
+                }
+            })
+            
         }else{
             console.log("GET_PLAY_LIST:ERROR")
         }
     })
 }
+
+
