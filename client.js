@@ -60,6 +60,10 @@ function play(musicName,cb){
 }
 
 function randomPlay(musicList){
+    if(musicList.length == 0){
+        console.log("PLAY:NO MUSIC FOUND")
+        return;
+    }
     var next = function(musicList,playedList){
         if(musicList.length == playedList.length){
             playedList = []
@@ -121,7 +125,7 @@ function getPlayList(cb){
                 var cmd = cmd.split(' ')
                 var completeFlag = 0;
                 for(var i=0;i<cmd.length;i++){
-                    var url = prefix + "/playList"+myList[i].substring(prefix.length)
+                    var url = prefix + "/playList"+myList[cmd[i]-1].substring(prefix.length)
                     request(url,function(err,res,body){
                         var music = JSON.parse(body);
                         music.forEach(function(add){
