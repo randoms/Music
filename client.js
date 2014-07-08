@@ -33,10 +33,9 @@ process.on('SIGINT', function() {
 });
 
 function play(musicName,cb){
-    console.log("PLAYING:"+musicName)
     var prefix = 'http://'+domain+':'+port+'/'
+    console.log("PLAYING:"+musicName.substring(prefix.length,musicName.length))
     var address = prefix+encodeURIComponent(musicName.substring(prefix.length,musicName.length))
-    console.log(address);
     var playmusic = spawn('mplayer',[address],{cwd:__dirname})
     playmusic.on("error",function(err){
         console.log(err);
@@ -64,27 +63,27 @@ function randomPlay(musicList){
         console.log("PLAY:NO MUSIC FOUND")
         return;
     }
-    var next = function(musicList,playedList){
-        if(musicList.length == playedList.length){
+    var next = function(mMusicList,playedList){
+        if(mMusicList.length == playedList.length){
             playedList = []
             console.log("PLAY:ONE_LOOP")
         }
         // gene random order
         var unplayedList = []
-        musicList.forEach(function(name){
+        mMusicList.forEach(function(name){
             var length = playedList.length
             var playFlag = false
             for(var i=0;i<length;i++){
-                if(name == playedList){
+                if(name == playedList[i]){
                     playFlag = true
                 }
             }
             if(!playFlag)unplayedList.push(name)
         })
         var order = parseInt(Math.random()*unplayedList.length)
-        play(musicList[order],function(){
-            playedList.push(musicList[order])
-            next(musicList,playedList)
+        play(unplayedList[order],function(){
+            playedList.push(unplayedList[order])
+            next(mMusicList,playedList)
         })
     }
     next(musicList,[])
